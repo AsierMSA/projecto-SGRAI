@@ -27,8 +27,8 @@
         <h3>3D Hospital Controls</h3>         
         <label for="room-select">Select Room:</label>         
         <select id="room-select">             
-            <option value="room1">Surgical Room 1</option>             
-            <option value="room2">Surgical Room 2</option>             
+            <option value="room1">Room 1</option>             
+            <option value="room2">Room 2</option>             
             <option value="room3">Room 3</option>             
             <option value="room4">Room 4</option>             
             <option value="room5">Room 5</option>         
@@ -63,7 +63,7 @@
             const tableTopMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
             const tableTop = new THREE.Mesh(tableTopGeometry, tableTopMaterial);
             tableTop.position.set(x, 1, z);
-
+  
             const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
             const legMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
             
@@ -87,73 +87,96 @@
             room5: null
         };
 
-        function createOpenRoom(x, z) {
-            const roomHeight = 3, roomWidth = 10, roomDepth = 15;
+        function createOpenRoom(x, z, doorOnBack = false) {
+    const roomHeight = 3, roomWidth = 10, roomDepth = 15;
+    const wallThickness = 0.1, doorWidth = 1, doorHeight = 2;
+    const walls = new THREE.Group();
 
-            const walls = new THREE.Group();
+    // Pared trasera
+    const backWall = new THREE.Mesh(
+        new THREE.BoxGeometry(roomWidth, roomHeight, wallThickness),
+        new THREE.MeshStandardMaterial({ color: 0x5555ff })
+    );
+    backWall.position.set(x, roomHeight / 2, z - roomDepth / 2);
+    walls.add(backWall);
 
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, roomHeight, 0.1), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
-            backWall.position.set(x, roomHeight / 2, z - roomDepth / 2);
-            walls.add(backWall);
+    // Pared izquierda
+    const leftWall = new THREE.Mesh(
+        new THREE.BoxGeometry(wallThickness, roomHeight, roomDepth),
+        new THREE.MeshStandardMaterial({ color: 0x5555ff })
+    );
+    leftWall.position.set(x - roomWidth / 2, roomHeight / 2, z);
+    walls.add(leftWall);
 
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight, roomDepth), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
-            leftWall.position.set(x - roomWidth / 2, roomHeight / 2, z);
-            walls.add(leftWall);
+    // Pared derecha
+    const rightWall = new THREE.Mesh(
+        new THREE.BoxGeometry(wallThickness, roomHeight, roomDepth),
+        new THREE.MeshStandardMaterial({ color: 0x5555ff })
+    );
+    rightWall.position.set(x + roomWidth / 2, roomHeight / 2, z);
+    walls.add(rightWall);
 
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight, roomDepth), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
-            rightWall.position.set(x + roomWidth / 2, roomHeight / 2, z);
-            walls.add(rightWall);
+    // Pared delantera
+    const frontWall = new THREE.Mesh(
+        new THREE.BoxGeometry(roomWidth, roomHeight, wallThickness),
+        new THREE.MeshStandardMaterial({ color: 0x5555ff })
+    );
+    frontWall.position.set(x, roomHeight / 2, z + roomDepth / 2);
+    walls.add(frontWall);
 
-            const wallThickness = 0.1, doorWidth = 1, doorHeight = 2;
+    // Crear la puerta en la pared trasera o delantera dependiendo de doorOnBack
+    const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, wallThickness);
+    const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const door = new THREE.Mesh(doorGeometry, doorMaterial);
 
-            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, roomHeight, wallThickness), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
-            frontWall.position.set(x, roomHeight / 2, z + roomDepth / 2);
-            walls.add(frontWall);
+    if (doorOnBack) {
+        // Puerta en la pared trasera
+        door.position.set(x, doorHeight / 2, z - roomDepth / 2 - wallThickness / 2);
+    } else {
+        // Puerta en la pared delantera
+        door.position.set(x, doorHeight / 2, z + roomDepth / 2 + wallThickness / 2);
+    }
+    walls.add(door);
 
-            const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, wallThickness);
-            const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-            const door = new THREE.Mesh(doorGeometry, doorMaterial);
-            door.position.set(x, doorHeight / 2, z + roomDepth / 2 + wallThickness / 2);
-            walls.add(door);
+    let state = "close";
+    const tween = new TWEEN.Tween(door.rotation);
 
-            let state = "close";
-            const tween = new TWEEN.Tween(door.rotation);
-
-            const actions = {
-                open: () => {
-                    if (state !== "open") {
-                        state = "open";
-                        tween.stop();
-                        tween.to({ y: Math.PI / 2.0 }, 2000 * (1.0 - door.rotation.y / (Math.PI / 2.0)));
-                        tween.start();
-                    }
-                },
-                close: () => {
-                    if (state !== "close") {
-                        state = "close";
-                        tween.stop();
-                        tween.to({ y: 0.0 }, 2000 * door.rotation.y / (Math.PI / 2.0));
-                        tween.start();
-                    }
-                }
-            };
-
-            const roomObject = { door, actions };
-            scene.add(walls);
-            return roomObject;
+    const actions = {
+        open: () => {
+            if (state !== "open") {
+                state = "open";
+                tween.stop();
+                tween.to({ y: Math.PI / 2.0 }, 2000 * (1.0 - door.rotation.y / (Math.PI / 2.0)));
+                tween.start();
+            }
+        },
+        close: () => {
+            if (state !== "close") {
+                state = "close";
+                tween.stop();
+                tween.to({ y: 0.0 }, 2000 * door.rotation.y / (Math.PI / 2.0));
+                tween.start();
+            }
         }
+    };
 
-        roomObjects.room1 = createOpenRoom(-15, 0);
-        roomObjects.room2 = createOpenRoom(15, 0);
-        roomObjects.room3 = createOpenRoom(-15, 25);
-        roomObjects.room4 = createOpenRoom(15, 25);
-        roomObjects.room5 = createOpenRoom(0, 25);
+    const roomObject = { door, actions };
+    scene.add(walls);
+    return roomObject;
+}
 
-        createTable(-15, 0);
-        createTable(15, 0);
-        createTable(-15, 25);
-        createTable(15, 25);
-        createTable(0, 25);
+roomObjects.room1 = createOpenRoom(-15, 0);
+roomObjects.room2 = createOpenRoom(15, 0);
+roomObjects.room3 = createOpenRoom(-15, 25, true);
+roomObjects.room4 = createOpenRoom(15, 25, true);
+roomObjects.room5 = createOpenRoom(0, 25, true);
+
+
+createTable(-15, 0);
+createTable(15, 0);
+createTable(-15, 25);
+createTable(15, 25);
+createTable(0, 25);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
