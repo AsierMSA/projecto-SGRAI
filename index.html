@@ -1,161 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Hospital Visualization</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-
-        #ui-panel {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1;
-            background-color: rgba(50, 50, 50, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-
-        label {
-            margin-right: 5px;
-        }
-
-        button {
-            margin-top: 5px;
-        }
-
-        canvas {
-            display: block;
-        }
-    </style>
-</head>
-
-<body>
-    <div id="ui-panel">
-        <h3>3D Hospital Controls</h3>
-        <label for="room-select">Select Room:</label>
-        <select id="room-select">
-            <option value="room1">Surgical Room 1</option>
-            <option value="room2">Surgical Room 2</option>
-        </select>
-        <br>
-        <button id="zoom-in">Zoom In</button>
-        <button id="zoom-out">Zoom Out</button>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dat.gui/build/dat.gui.min.js"></script>
+<!DOCTYPE html> 
+<html lang="en">  
+<head>     
+    <meta charset="UTF-8">     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">     
+    <title>3D Hospital Visualization</title>     
+    <style>         
+        body { margin: 0; overflow: hidden; }          
+        #ui-panel {             
+            position: absolute;             
+            top: 10px;             
+            left: 10px;             
+            z-index: 1;             
+            background-color: rgba(50, 50, 50, 0.7);             
+            padding: 10px;             
+            border-radius: 5px;             
+            color: white;             
+            font-family: Arial, sans-serif;         
+        }          
+        label { margin-right: 5px; }         
+        button { margin-top: 5px; }          
+        canvas { display: block; }     
+    </style> 
+</head>  
+<body>     
+    <div id="ui-panel">         
+        <h3>3D Hospital Controls</h3>         
+        <label for="room-select">Select Room:</label>         
+        <select id="room-select">             
+            <option value="room1">Surgical Room 1</option>             
+            <option value="room2">Surgical Room 2</option>             
+            <option value="room3">Room 3</option>             
+            <option value="room4">Room 4</option>             
+            <option value="room5">Room 5</option>         
+        </select>         
+        <br>         
+        <button id="zoom-in">Zoom In</button>         
+        <button id="zoom-out">Zoom Out</button>         
+        <br>         
+        <button id="open-door">Open Door</button>         
+        <button id="close-door">Close Door</button>     
+    </div>     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>     
     <script>
-        // Setup scene, camera, and renderer
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Load textures
         const textureLoader = new THREE.TextureLoader();
-        const floorTexture = textureLoader.load('textures/floor.png'); // Path to floor texture
-
+        const floorTexture = textureLoader.load('textures/floor.png');
         const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture });
 
-        // Create basic floor with texture
         const floorGeometry = new THREE.PlaneGeometry(100, 100);
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
         scene.add(floor);
 
-        // Create a simple table
         function createTable(x, z) {
             const tableTopGeometry = new THREE.BoxGeometry(4, 0.1, 2);
-            const tableTopMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // Brown color
+            const tableTopMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
             const tableTop = new THREE.Mesh(tableTopGeometry, tableTopMaterial);
             tableTop.position.set(x, 1, z);
 
-            // Create table legs
             const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
-            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 }); // Darker brown for legs
-
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x654321 });
+            
             const leg1 = new THREE.Mesh(legGeometry, legMaterial);
-            leg1.position.set(x - 1.8, 0.6, z - 0.8); // Position for leg 1
-
+            leg1.position.set(x - 1.8, 0.6, z - 0.8);
             const leg2 = leg1.clone();
-            leg2.position.set(x + 1.8, 0.6, z - 0.8); // Position for leg 2
-
+            leg2.position.set(x + 1.8, 0.6, z - 0.8);
             const leg3 = leg1.clone();
-            leg3.position.set(x - 1.8, 0.6, z + 0.8); // Position for leg 3
-
+            leg3.position.set(x - 1.8, 0.6, z + 0.8);
             const leg4 = leg1.clone();
-            leg4.position.set(x + 1.8, 0.6, z + 0.8); // Position for leg 4
+            leg4.position.set(x + 1.8, 0.6, z + 0.8);
 
             scene.add(tableTop, leg1, leg2, leg3, leg4);
         }
 
-        // Create rooms with door openings
-        function createOpenRoom(x, z) {
-            const roomHeight = 3;
-            const roomWidth = 10;
-            const roomDepth = 15;
+        const roomObjects = {
+            room1: null,
+            room2: null,
+            room3: null,
+            room4: null,
+            room5: null
+        };
 
-            // Create walls
+        function createOpenRoom(x, z) {
+            const roomHeight = 3, roomWidth = 10, roomDepth = 15;
+
             const walls = new THREE.Group();
 
-            // Create back wall
             const backWall = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, roomHeight, 0.1), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
             backWall.position.set(x, roomHeight / 2, z - roomDepth / 2);
             walls.add(backWall);
 
-            // Create left wall
             const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight, roomDepth), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
             leftWall.position.set(x - roomWidth / 2, roomHeight / 2, z);
             walls.add(leftWall);
 
-            // Create right wall
             const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.1, roomHeight, roomDepth), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
             rightWall.position.set(x + roomWidth / 2, roomHeight / 2, z);
             walls.add(rightWall);
 
-            // Create front wall with door opening
-            const wallThickness = 0.1; // Wall thickness
-            const doorWidth = 1; // Door width
-            const doorHeight = 2; // Door height
+            const wallThickness = 0.1, doorWidth = 1, doorHeight = 2;
 
-            // Create front wall without the door opening
-            const frontWall = new THREE.Mesh(
-                new THREE.BoxGeometry(roomWidth, roomHeight, wallThickness),
-                new THREE.MeshStandardMaterial({ color: 0x5555ff })
-            );
+            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(roomWidth, roomHeight, wallThickness), new THREE.MeshStandardMaterial({ color: 0x5555ff }));
             frontWall.position.set(x, roomHeight / 2, z + roomDepth / 2);
             walls.add(frontWall);
 
-            // Create door opening
-            const doorOpeningGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, wallThickness);
-            const doorOpening = new THREE.Mesh(doorOpeningGeometry, new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0 }));
-            doorOpening.position.set(x, doorHeight / 2, z + roomDepth / 2 + wallThickness / 2);
-            walls.add(doorOpening);
-
-            // Create door
             const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, wallThickness);
             const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
             const door = new THREE.Mesh(doorGeometry, doorMaterial);
             door.position.set(x, doorHeight / 2, z + roomDepth / 2 + wallThickness / 2);
             walls.add(door);
 
-            // Setup tween for door
             let state = "close";
             const tween = new TWEEN.Tween(door.rotation);
 
-            // Create actions for door
             const actions = {
                 open: () => {
-                    if (state != "open") {
+                    if (state !== "open") {
                         state = "open";
                         tween.stop();
                         tween.to({ y: Math.PI / 2.0 }, 2000 * (1.0 - door.rotation.y / (Math.PI / 2.0)));
@@ -163,7 +129,7 @@
                     }
                 },
                 close: () => {
-                    if (state != "close") {
+                    if (state !== "close") {
                         state = "close";
                         tween.stop();
                         tween.to({ y: 0.0 }, 2000 * door.rotation.y / (Math.PI / 2.0));
@@ -172,91 +138,77 @@
                 }
             };
 
-            // Setup dat.GUI
-            const gui = new dat.GUI();
-            gui.add(actions, "open");
-            gui.add(actions, "close");
-
+            const roomObject = { door, actions };
             scene.add(walls);
+            return roomObject;
         }
 
-        // Create rooms
-        createOpenRoom(-15, 0);
-        createOpenRoom(15, 0);
-        createTable(-15, 0); // Add the table to the scene
-        createTable(15, 0); // Optionally, add a table in the second room as well
-        createOpenRoom(-15, 25);  // Habitación 3 enfrente de la habitación 1
-        createOpenRoom(15, 25);   // Habitación 4 enfrente de la habitación 2
-        createOpenRoom(0, 25);
+        roomObjects.room1 = createOpenRoom(-15, 0);
+        roomObjects.room2 = createOpenRoom(15, 0);
+        roomObjects.room3 = createOpenRoom(-15, 25);
+        roomObjects.room4 = createOpenRoom(15, 25);
+        roomObjects.room5 = createOpenRoom(0, 25);
+
+        createTable(-15, 0);
+        createTable(15, 0);
         createTable(-15, 25);
         createTable(15, 25);
         createTable(0, 25);
-        // Add ambient light for general illumination
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         scene.add(ambientLight);
 
-        // Add a point light to illuminate the scene with reduced intensity
-        const light = new THREE.PointLight(0xffffff, 0.7, 100); // Reduced intensity
+        const light = new THREE.PointLight(0xffffff, 0.7, 100);
         light.position.set(10, 20, 10);
         scene.add(light);
 
-        // Human model placeholder (a simple box for now)
-        const humanGeometry = new THREE.BoxGeometry(1, 0.5, 2);
-        const humanMaterial = new THREE.MeshStandardMaterial({ color: 0xff9999 });
-        const human = new THREE.Mesh(humanGeometry, humanMaterial);
-        human.position.set(-15, 1.5, 0);
-        human.visible = false; // Initially not visible
-        scene.add(human);
-
-        // Function to update camera position based on selected room
         function updateCamera(roomId) {
-            if (roomId === 'room1') {
-                camera.position.set(-15, 15, 25); // Adjust to see Room 1 better
-                human.position.set(-11, 1.5, 0); // Adjust human position for Room 1
-                human.visible = true; // Show human model for Room 1
-            } else {
-                camera.position.set(15, 15, 25); // Adjust to see Room 2 better
-                human.position.set(11, 1.5, 0); // Adjust human position for Room 2
-                human.visible = true; // Show human model for Room 2
-            }
-            camera.lookAt(0, 1, 0); // Look at the center of the scene
+            const roomPositions = {
+                room1: [-15, 15, 25],
+                room2: [15, 15, 25],
+                room3: [-15, 15, 50],
+                room4: [15, 15, 50],
+                room5: [0, 15, 50]
+            };
+            camera.position.set(...roomPositions[roomId]);
+            camera.lookAt(0, 1, 0);
         }
 
-        // Event listeners for zoom buttons
         document.getElementById('zoom-in').addEventListener('click', () => {
-            camera.fov = Math.max(20, camera.fov - 5); // Decrease FOV for zooming in
-            camera.updateProjectionMatrix(); // Update the camera's projection matrix
+            camera.fov = Math.max(20, camera.fov - 5);
+            camera.updateProjectionMatrix();
         });
 
         document.getElementById('zoom-out').addEventListener('click', () => {
-            camera.fov = Math.min(100, camera.fov + 5); // Increase FOV for zooming out
-            camera.updateProjectionMatrix(); // Update the camera's projection matrix
+            camera.fov = Math.min(100, camera.fov + 5);
+            camera.updateProjectionMatrix();
         });
 
-        // Event listener for room selection
         document.getElementById('room-select').addEventListener('change', (event) => {
-            updateCamera(event.target.value);
+            const roomId = event.target.value;
+            updateCamera(roomId);
         });
 
-        // Initial camera position
-        updateCamera(document.getElementById('room-select').value);
+        document.getElementById('open-door').addEventListener('click', () => {
+            const roomId = document.getElementById('room-select').value;
+            roomObjects[roomId].actions.open();
+        });
 
-        // Animation loop
+        document.getElementById('close-door').addEventListener('click', () => {
+            const roomId = document.getElementById('room-select').value;
+            roomObjects[roomId].actions.close();
+        });
+
+        camera.position.set(0, 30, 75);
+        camera.lookAt(0, 1, 0);
+
         function animate() {
             requestAnimationFrame(animate);
-            TWEEN.update(); // Update TWEEN animations
+            TWEEN.update();
             renderer.render(scene, camera);
         }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
+        
         animate();
-    </script>
-</body>
-
+    </script> 
+</body>  
 </html>
