@@ -1,0 +1,21 @@
+{
+    "rooms": [
+      {
+        "id": "surgical-room-1",
+        "x": 0,
+        "y": 0,
+        "width": 10,
+        "depth": 15,
+        "isOccupied": true
+      },
+      {
+        "id": "surgical-room-2",
+        "x": 15,
+        "y": 0,
+        "width": 10,
+        "depth": 15,
+        "isOccupied": false
+      }
+    ]
+  }
+  
