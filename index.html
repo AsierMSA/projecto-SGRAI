@@ -52,7 +52,9 @@
         const textureLoader = new THREE.TextureLoader();
         const floorTexture = textureLoader.load('textures/floor.png');
         const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture });
-
+        const doorClosedTexture = textureLoader.load('textures/door_original.jpg');
+        const doorOpenTexture = textureLoader.load('textures/door_front.png');
+        const frameTexture = textureLoader.load('textures/frame_front.png');
         const floorGeometry = new THREE.PlaneGeometry(100, 100);
         const floor = new THREE.Mesh(floorGeometry, floorMaterial);
         floor.rotation.x = -Math.PI / 2;
@@ -124,43 +126,55 @@
     frontWall.position.set(x, roomHeight / 2, z + roomDepth / 2);
     walls.add(frontWall);
 
-    // Crear la puerta en la pared trasera o delantera dependiendo de doorOnBack
     const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, wallThickness);
-    const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const doorMaterial = new THREE.MeshStandardMaterial({ map: doorClosedTexture });
     const door = new THREE.Mesh(doorGeometry, doorMaterial);
 
     if (doorOnBack) {
-        // Puerta en la pared trasera
         door.position.set(x, doorHeight / 2, z - roomDepth / 2 - wallThickness / 2);
     } else {
-        // Puerta en la pared delantera
         door.position.set(x, doorHeight / 2, z + roomDepth / 2 + wallThickness / 2);
     }
     walls.add(door);
-
+    const frameGeometry = new THREE.BoxGeometry(doorWidth + 0.2, doorHeight + 0.2, 0.05);
+    const frameMaterial = new THREE.MeshStandardMaterial({ map: frameTexture });
+    const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+    frame.position.copy(door.position);
+    frame.visible = false;  
+    walls.add(frame);
     let state = "close";
+    let initialPosition = door.position.x;
     const tween = new TWEEN.Tween(door.rotation);
-
+    
     const actions = {
-        open: () => {
-            if (state !== "open") {
-                state = "open";
-                tween.stop();
-                tween.to({ y: Math.PI / 2.0 }, 2000 * (1.0 - door.rotation.y / (Math.PI / 2.0)));
-                tween.start();
-            }
-        },
-        close: () => {
-            if (state !== "close") {
-                state = "close";
-                tween.stop();
-                tween.to({ y: 0.0 }, 2000 * door.rotation.y / (Math.PI / 2.0));
-                tween.start();
-            }
+    open: () => {
+        if (state !== "open") {
+            state = "open";
+            tween.stop();
+            tween.to({ y: Math.PI / 2.0 }, 2000 * (1.0 - door.rotation.y / Math.PI / 2.0));            
+            tween.onStart(() => {
+                door.material.map = doorOpenTexture; 
+                frame.visible = true; 
+            });
+            tween.start();
         }
-    };
+    },
+    close: () => {
+        if (state !== "close") {
+            state = "close";
+            tween.stop();
+            tween.to({ y: 0.0 }, 2000 * door.rotation.y / Math.PI / 2.0);            door.position.set(door.position.x + doorWidth / 2, door.position.y, door.position.z);
+            door.position.set(initialPosition, door.position.y, door.position.z);
+            tween.onComplete(() => {
+                door.material.map = doorClosedTexture;  
+            });
+            tween.start();
+        }
+    }
+};
 
-    const roomObject = { door, actions };
+
+    const roomObject = { door,frame, actions };
     scene.add(walls);
     return roomObject;
 }
